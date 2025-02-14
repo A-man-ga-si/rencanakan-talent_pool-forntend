@@ -1,42 +1,33 @@
-name: Deploy to Staging
+name: Deploy to Vercel (Staging)
 
 on:
   push:
     branches:
-      - stg # Trigger only when pushing to the stg branch
+      - stg
 
 jobs:
-  deploy:
+  deploy-stg:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout code
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      # Step 2: Install Vercel CLI
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
 
-      # Step 3: Log in to Vercel
-      - name: Log in to Vercel
-        run: vercel login --token ${{ secrets.VERCEL_TOKEN }}
+      - name: Install dependencies
+        run: npm install
 
-      # Step 4: Pull Environment Information
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=preview --scope=rencanakanid-stg --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build the project
+        run: npm run build
 
-      # Step 5: Build Project Artifacts
-      - name: Build Project Artifacts
-        run: vercel build --prod --scope=rencanakanid-stg --token=${{ secrets.VERCEL_TOKEN }}
-
-      # Step 6: Deploy Project Artifacts to Vercel
-      - name: Deploy to Vercel
-        id: deploy
+      - name: Deploy to Vercel (Staging)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         run: |
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --scope=rencanakanid-stg --token=${{ secrets.VERCEL_TOKEN }} --json | jq -r '.url')
-          echo "Deployment URL: $DEPLOYMENT_URL"
-          echo "DEPLOYMENT_URL=$DEPLOYMENT_URL" >> $GITHUB_ENV
-
-      # Step 7: Print Deployment URL
-      - name: Print Deployment URL
-        run: echo "The deployment URL is ${{ env.DEPLOYMENT_URL }}"
+          npx vercel --token $VERCEL_TOKEN --project $VERCEL_PROJECT_ID --org $VERCEL_ORG_ID --confirm --env=stg
