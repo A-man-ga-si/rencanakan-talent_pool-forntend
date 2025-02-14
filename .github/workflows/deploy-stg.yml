@@ -1,47 +1,42 @@
-name: Deploy Staging
+name: Deploy to Staging
 
 on:
   push:
-    branches: [stg]
+    branches:
+      - stg # Trigger only when pushing to the stg branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-      - uses: actions/checkout@v4
+      # Step 1: Checkout code
+      - uses: actions/checkout@v3
 
-      # Debugging: Check if secrets are available
-      - name: Debug Secrets
+      # Step 2: Install Vercel CLI
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      # Step 3: Log in to Vercel
+      - name: Log in to Vercel
+        run: vercel login --token ${{ secrets.VERCEL_TOKEN }}
+
+      # Step 4: Pull Environment Information
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=preview --scope=rencanakanid-stg --token=${{ secrets.VERCEL_TOKEN }}
+
+      # Step 5: Build Project Artifacts
+      - name: Build Project Artifacts
+        run: vercel build --prod --scope=rencanakanid-stg --token=${{ secrets.VERCEL_TOKEN }}
+
+      # Step 6: Deploy Project Artifacts to Vercel
+      - name: Deploy to Vercel
+        id: deploy
         run: |
-          if [[ -z "${VERCEL_TOKEN}" ]]; then
-            echo "❌ VERCEL_TOKEN is missing"
-            exit 1
-          else
-            echo "✅ VERCEL_TOKEN is set"
-          fi
-          if [[ -z "${VERCEL_ORG_ID}" ]]; then
-            echo "❌ VERCEL_ORG_ID is missing"
-            exit 1
-          else
-            echo "✅ VERCEL_ORG_ID is set"
-          fi
-          if [[ -z "${VERCEL_PROJECT_ID}" ]]; then
-            echo "❌ VERCEL_PROJECT_ID is missing"
-            exit 1
-          else
-            echo "✅ VERCEL_PROJECT_ID is set"
-          fi
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --scope=rencanakanid-stg --token=${{ secrets.VERCEL_TOKEN }} --json | jq -r '.url')
+          echo "Deployment URL: $DEPLOYMENT_URL"
+          echo "DEPLOYMENT_URL=$DEPLOYMENT_URL" >> $GITHUB_ENV
 
-      # Deploy to Vercel Staging
-      - name: Deploy to Vercel (Staging)
-        uses: vercel/actions@v4
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          alias-domains: rencanakanid-stg.vercel.app
+      # Step 7: Print Deployment URL
+      - name: Print Deployment URL
+        run: echo "The deployment URL is ${{ env.DEPLOYMENT_URL }}"
