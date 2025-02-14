@@ -10,12 +10,38 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
+
+      # Debugging: Check if secrets are available
+      - name: Debug Secrets
+        run: |
+          if [[ -z "${VERCEL_TOKEN}" ]]; then
+            echo "❌ VERCEL_TOKEN is missing"
+            exit 1
+          else
+            echo "✅ VERCEL_TOKEN is set"
+          fi
+          if [[ -z "${VERCEL_ORG_ID}" ]]; then
+            echo "❌ VERCEL_ORG_ID is missing"
+            exit 1
+          else
+            echo "✅ VERCEL_ORG_ID is set"
+          fi
+          if [[ -z "${VERCEL_PROJECT_ID}" ]]; then
+            echo "❌ VERCEL_PROJECT_ID is missing"
+            exit 1
+          else
+            echo "✅ VERCEL_PROJECT_ID is set"
+          fi
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      # Deploy to Vercel Staging
+      - name: Deploy to Vercel (Staging)
+        uses: vercel/actions@v1
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          alias-domains: |
-            rencanakanid-stg.vercel.app
+          alias-domains: rencanakanid-stg.vercel.app
