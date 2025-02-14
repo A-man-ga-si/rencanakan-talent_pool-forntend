@@ -1,11 +1,11 @@
-name: Deploy STAGING
+name: Deploy Production
 on:
   push:
     branches:
-      - stg 
+      - main 
   pull_request:
     branches:
-      - stg
+      - main
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
