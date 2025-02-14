@@ -1,52 +1,40 @@
-name: Deploy to Vercel (Staging)
-
+name: Deploy STAGING
 on:
   push:
     branches:
+      - stg 
+  pull_request:
+    branches:
       - stg
 
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_STG }}
+
 jobs:
-  deploy-stg:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Set Vercel Environment
-        run: |
-          if [[ "${{ github.ref }}" == "refs/heads/stg" ]]; then
-            echo "VERCEL_ENV=preview-rencanakanid-stg" >> $GITHUB_ENV
-          else
-            echo "VERCEL_ENV=production-rencanakanid-stg" >> $GITHUB_ENV
-          fi
-
-      - name: Debug Environment
-        run: |
-          echo "Using Vercel Environment: $VERCEL_ENV"
-          echo "VERCEL_TOKEN length: ${#VERCEL_TOKEN}"
-          echo "VERCEL_PROJECT_ID length: ${#VERCEL_PROJECT_ID}"
-          echo "VERCEL_ORG_ID length: ${#VERCEL_ORG_ID}"
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_STG }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Build the project
-        run: npm run build
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
 
-      - name: Deploy to Vercel (Staging)
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_STG }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        run: |
-          npx vercel --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID" --org="$VERCEL_ORG_ID" --confirm --env=$VERCEL_ENV
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=staging --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        if: github.event_name == 'push' && github.ref == 'refs/heads/stg'
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
