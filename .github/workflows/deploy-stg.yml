@@ -29,7 +29,7 @@ jobs:
           echo "VERCEL_ORG_ID length: ${#VERCEL_ORG_ID}"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_STG }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
 
       - name: Set up Node.js
@@ -46,7 +46,7 @@ jobs:
       - name: Deploy to Vercel (Staging)
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_STG }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         run: |
           npx vercel --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID" --org="$VERCEL_ORG_ID" --confirm --env=$VERCEL_ENV
